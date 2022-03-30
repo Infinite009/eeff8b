@@ -25,7 +25,7 @@ const Input = ({ otherUser, conversationId, user, postMessage }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const form = event.currentTarget;
+    const form = event.target;
     const formElements = form.elements;
     // add sender user info if posting to a brand new convo, so that the other user will have access to username, profile pic, etc.
     const reqBody = {
