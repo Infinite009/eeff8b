@@ -120,6 +120,19 @@ const Home = ({ user, logout }) => {
     setActiveConversation(username);
   };
 
+  const updateLastReadId = async (conversationId, lastReadId) => {
+    try {
+      await axios.post('/api/conversations/last-read', { id: conversationId, lastReadId });
+
+      setConversations(prev => prev.map(convo => {
+        if (convo.id !== conversationId) return convo;
+        return { ...convo, lastReadId };
+      }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const addOnlineUser = useCallback((id) => {
     setConversations((prev) =>
       prev.map((convo) => {
@@ -215,6 +228,7 @@ const Home = ({ user, logout }) => {
           conversations={conversations}
           user={user}
           postMessage={postMessage}
+          updateLastReadId={updateLastReadId}
         />
       </Grid>
     </>

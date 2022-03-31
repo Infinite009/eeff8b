@@ -18,7 +18,7 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
-      attributes: ["id"],
+      attributes: ["id", "lastReadId1", "lastReadId2"],
       order: [[Message, "createdAt", "ASC"]],
       include: [
         { model: Message },
@@ -55,10 +55,14 @@ router.get("/", async (req, res, next) => {
       if (convoJSON.user1) {
         convoJSON.otherUser = convoJSON.user1;
         delete convoJSON.user1;
+        convoJSON.lastReadId = convoJSON.lastReadId2;
       } else if (convoJSON.user2) {
         convoJSON.otherUser = convoJSON.user2;
         delete convoJSON.user2;
+        convoJSON.lastReadId = convoJSON.lastReadId1;
       }
+      delete convoJSON.lastReadId1;
+      delete convoJSON.lastReadId2;
 
       // set property for online status of the other user
       if (onlineUsers.includes(convoJSON.otherUser.id)) {
@@ -75,6 +79,25 @@ router.get("/", async (req, res, next) => {
     res.json(conversations);
   } catch (error) {
     next(error);
+  }
+});
+
+router.post("/last-read", async (req, res, next) => {
+  try {
+    if (!req.user) return res.sendStatus(401);
+
+    const { id, lastReadId } = req.body;
+    if (!id || !lastReadId) return res.sendStatus(400);
+
+    const senderId = req.user.id;
+    const convo = await Conversation.findOne({ where: { id }, attributes: ["user1Id", "user2Id"] });
+    const updateClause = convo.user1Id === senderId ?
+      { lastReadId1: lastReadId } : { lastReadId2: lastReadId };
+
+    await Conversation.update(updateClause, { where: { id } });
+    res.json(true);
+  } catch (err) {
+    next(err);
   }
 });
 
