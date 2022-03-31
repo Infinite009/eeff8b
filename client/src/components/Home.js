@@ -80,18 +80,16 @@ const Home = ({ user, logout }) => {
 
   const addNewConvo = useCallback(
     (recipientId, message) => {
-      const convs = [...conversations];
-      convs.forEach((convo) => {
-        if (convo.otherUser.id === recipientId) {
-          convo.messages.push(message);
-          convo.latestMessageText = message.text;
-          convo.id = message.conversationId;
-        }
-      });
-      setConversations(convs);
-    },
-    [setConversations, conversations]
-  );
+      setConversations(prev => prev.map(convo => {
+        if (convo.otherUser.id !== recipientId) return convo;
+        return {
+          ...convo,
+          id: message.conversationId,
+          messages: [...convo.messages, message],
+          latestMessageText: message.text
+        };
+      }));
+    },[]);
 
   const addMessageToConversation = useCallback(
     (data) => {
@@ -105,19 +103,18 @@ const Home = ({ user, logout }) => {
         };
         newConvo.latestMessageText = message.text;
         setConversations((prev) => [newConvo, ...prev]);
+        return;
       }
 
-      let convs = [...conversations];
-      convs.forEach((convo) => {
-        if (convo.id === message.conversationId) {
-          convo.messages.push(message);
-          convo.latestMessageText = message.text;
-        }
-      });
-      setConversations(convs);
-    },
-     [setConversations, conversations]
-     );
+      setConversations(prev => prev.map(convo => {
+        if (convo.id !== message.conversationId) return convo;
+        return {
+          ...convo,
+          messages: [...convo.messages, message],
+          latestMessageText: message.text
+        };
+      }));
+    }, []);
 
   const setActiveChat = (username) => {
     setActiveConversation(username);
