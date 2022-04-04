@@ -1,18 +1,15 @@
 const Sequelize = require("sequelize");
 const db = require("../db");
-const Message = require("./message");
 
+// it'd be great if we call this model as room or group
 const Conversation = db.define("conversation", {
-  lastReadId1: {
-    type: Sequelize.INTEGER,
-    allowNull: true,
-  },
-  lastReadId2: {
-    type: Sequelize.INTEGER,
-    allowNull: true,
+  name: {
+    type: Sequelize.STRING,
+    allowNull: false,
   }
 });
 
+// need to remove the below function
 // find conversation given two user Ids
 
 Conversation.findConversation = async function (user1Id, user2Id) {
