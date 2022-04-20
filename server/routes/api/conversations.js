@@ -55,16 +55,24 @@ router.get("/", async (req, res, next) => {
       if (convoJSON.user1) {
         convoJSON.otherUser = convoJSON.user1;
         delete convoJSON.user1;
-        convoJSON.lastReadId = convoJSON.lastReadId2;
-        convoJSON.otherUser.lastReadId = convoJSON.lastReadId1;
+        convoJSON.lastReadId = convoJSON.lastReadId2 || 0;
+        convoJSON.otherUser.lastReadId = convoJSON.lastReadId1 || 0;
       } else if (convoJSON.user2) {
         convoJSON.otherUser = convoJSON.user2;
         delete convoJSON.user2;
-        convoJSON.lastReadId = convoJSON.lastReadId1;
-        convoJSON.otherUser.lastReadId = convoJSON.lastReadId2;
+        convoJSON.lastReadId = convoJSON.lastReadId1 || 0;
+        convoJSON.otherUser.lastReadId = convoJSON.lastReadId2 || 0;
       }
       delete convoJSON.lastReadId1;
       delete convoJSON.lastReadId2;
+
+      convoJSON.unreadCount = await Message.count({
+        where: {
+          conversationId: convoJSON.id,
+          id: { [Op.gt]: convoJSON.lastReadId },
+          senderId: convoJSON.otherUser.id
+        }
+      });
 
       // set property for online status of the other user
       if (onlineUsers.includes(convoJSON.otherUser.id)) {
@@ -73,9 +81,9 @@ router.get("/", async (req, res, next) => {
         convoJSON.otherUser.online = false;
       }
 
-      convoJSON.messages.reverse();
       // set properties for notification count and latest message preview
       convoJSON.latestMessageText = convoJSON.messages[0].text;
+      convoJSON.messages.reverse();
       conversations[i] = convoJSON;
     }
 
@@ -85,7 +93,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/last-read", async (req, res, next) => {
+router.patch("/last-read", async (req, res, next) => {
   try {
     if (!req.user) return res.sendStatus(401);
 
@@ -94,8 +102,11 @@ router.post("/last-read", async (req, res, next) => {
 
     const senderId = req.user.id;
     const convo = await Conversation.findOne({ where: { id }, attributes: ["user1Id", "user2Id"] });
-    const updateClause = convo.user1Id === senderId ?
-      { lastReadId1: lastReadId } : { lastReadId2: lastReadId };
+
+    let updateClause;
+    if (senderId === convo.user1Id) updateClause = { lastReadId1: lastReadId };
+    else if (senderId === convo.user2Id) updateClause = { lastReadId2: lastReadId };
+    else return res.sendStatus(403);
 
     await Conversation.update(updateClause, { where: { id } });
     res.json(true);

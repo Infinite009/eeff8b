@@ -37,7 +37,7 @@ const Home = ({ user, logout }) => {
     users.forEach((user) => {
       // only create a fake convo if we don't already have a convo with this user
       if (!currentUsers[user.id]) {
-        let fakeConvo = { otherUser: user, messages: [] };
+        let fakeConvo = { otherUser: user, messages: [], lastReadId: 0, unreadCount: 0 };
         newState.push(fakeConvo);
       }
     });
@@ -85,6 +85,8 @@ const Home = ({ user, logout }) => {
         return {
           ...convo,
           id: message.conversationId,
+          lastReadId: 0,
+          unreadCount: 0,
           messages: [...convo.messages, message],
           latestMessageText: message.text
         };
@@ -99,6 +101,7 @@ const Home = ({ user, logout }) => {
         const newConvo = {
           id: message.conversationId,
           lastReadId: 0,
+          unreadCount: 1,
           otherUser: { ...sender, lastReadId: 0 },
           messages: [message],
         };
@@ -109,8 +112,10 @@ const Home = ({ user, logout }) => {
 
       setConversations(prev => prev.map(convo => {
         if (convo.id !== message.conversationId) return convo;
+
         return {
           ...convo,
+          unreadCount: message.senderId === convo.otherUser.id ? convo.unreadCount + 1 : 0,
           messages: [...convo.messages, message],
           latestMessageText: message.text
         };
@@ -123,11 +128,11 @@ const Home = ({ user, logout }) => {
 
   const updateLastReadId = async (conversationId, lastReadId) => {
     try {
-      await axios.post('/api/conversations/last-read', { id: conversationId, lastReadId });
+      await axios.patch('/api/conversations/last-read', { id: conversationId, lastReadId });
 
       setConversations(prev => prev.map(convo => {
         if (convo.id !== conversationId) return convo;
-        return { ...convo, lastReadId };
+        return { ...convo, lastReadId, unreadCount: 0 };
       }));
 
       sendLastReadId(conversationId, lastReadId);
@@ -137,12 +142,12 @@ const Home = ({ user, logout }) => {
   };
 
   const sendLastReadId = (conversationId, lastReadId) => {
-    socket.emit('last-read', { conversationId, lastReadId });
+    socket.emit('last-read', { conversationId, lastReadId, senderId: user.id });
   };
 
-  const updateOtherUserLastReadId = useCallback(({ conversationId, lastReadId }) => {
+  const updateOtherUserLastReadId = useCallback(({ conversationId, lastReadId, senderId }) => {
     setConversations((prev) => prev.map(convo => {
-      if (convo.id !== conversationId) return convo;
+      if (convo.id !== conversationId || convo.otherUser.id !== senderId) return convo;
       return { ...convo, otherUser: { ...convo.otherUser, lastReadId } };
     }));
   }, []);

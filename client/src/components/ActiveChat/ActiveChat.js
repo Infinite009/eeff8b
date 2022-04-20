@@ -51,7 +51,7 @@ const ActiveChat = ({
               <>
                 <Messages
                   conversationId={conversation.id}
-                  lastReadId={conversation.lastReadId}
+                  unreadCount={conversation.unreadCount}
                   updateLastReadId={updateLastReadId}
                   messages={conversation.messages}
                   otherUser={conversation.otherUser}

@@ -14,18 +14,18 @@ const useStyles = makeStyles(() => ({
 }));
 
 const Messages = (props) => {
-  const { messages, otherUser, userId, lastReadId, updateLastReadId, conversationId } = props;
+  const { messages, otherUser, userId, updateLastReadId, conversationId, unreadCount } = props;
   const classes = useStyles();
 
   useEffect(() => {
-    let latestId = 0;
+    if (unreadCount === 0) return;
+    
     for (let i = messages.length - 1; i >= 0; i --)
       if (messages[i].senderId !== userId ) {
-        latestId = messages[i].id;
-        break;
+        updateLastReadId(conversationId, messages[i].id);
+        return;
       }
-    if (latestId > lastReadId) updateLastReadId(conversationId, latestId);
-  }, [messages, lastReadId, updateLastReadId, conversationId, userId]);
+  }, [messages, updateLastReadId, conversationId, unreadCount, userId]);
 
   return (
     <Box>

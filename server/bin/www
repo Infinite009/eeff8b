@@ -47,8 +47,8 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on('last-read', ({ conversationId, lastReadId }) => {
-    socket.broadcast.emit('last-read', { conversationId, lastReadId });
+  socket.on('last-read', ({ conversationId, lastReadId, senderId }) => {
+    socket.broadcast.emit('last-read', { conversationId, lastReadId, senderId });
   });
 
   socket.on("logout", (id) => {
