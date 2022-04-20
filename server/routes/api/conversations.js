@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { User, Conversation, Message } = require("../../db/models");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const onlineUsers = require("../../onlineUsers");
 
 // get all conversations for a user, include latest message text for preview, and all messages
@@ -19,7 +19,7 @@ router.get("/", async (req, res, next) => {
         },
       },
       attributes: ["id", "lastReadId1", "lastReadId2"],
-      order: [[Message, "createdAt", "ASC"]],
+      order: [[Message, "createdAt", "DESC"]],
       include: [
         { model: Message },
         {
@@ -56,10 +56,12 @@ router.get("/", async (req, res, next) => {
         convoJSON.otherUser = convoJSON.user1;
         delete convoJSON.user1;
         convoJSON.lastReadId = convoJSON.lastReadId2;
+        convoJSON.otherUser.lastReadId = convoJSON.lastReadId1;
       } else if (convoJSON.user2) {
         convoJSON.otherUser = convoJSON.user2;
         delete convoJSON.user2;
         convoJSON.lastReadId = convoJSON.lastReadId1;
+        convoJSON.otherUser.lastReadId = convoJSON.lastReadId2;
       }
       delete convoJSON.lastReadId1;
       delete convoJSON.lastReadId2;
@@ -71,8 +73,9 @@ router.get("/", async (req, res, next) => {
         convoJSON.otherUser.online = false;
       }
 
+      convoJSON.messages.reverse();
       // set properties for notification count and latest message preview
-      convoJSON.latestMessageText = convoJSON.messages[convoJSON.messages.length - 1].text;
+      convoJSON.latestMessageText = convoJSON.messages[0].text;
       conversations[i] = convoJSON;
     }
 

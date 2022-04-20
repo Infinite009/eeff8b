@@ -9,7 +9,7 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: 20,
     flexGrow: 1,
   },
-  username: {
+  boldText: {
     fontWeight: "bold",
     letterSpacing: -0.2,
   },
@@ -20,7 +20,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const ChatContent = ({ conversation }) => {
+const ChatContent = ({ conversation, unreadCount }) => {
   const classes = useStyles();
 
   const { otherUser } = conversation;
@@ -29,10 +29,10 @@ const ChatContent = ({ conversation }) => {
   return (
     <Box className={classes.root}>
       <Box>
-        <Typography className={classes.username}>
+        <Typography className={classes.boldText}>
           {otherUser.username}
         </Typography>
-        <Typography className={classes.previewText}>
+        <Typography className={unreadCount > 0 ? classes.boldText : classes.previewText}>
           {latestMessageText}
         </Typography>
       </Box>

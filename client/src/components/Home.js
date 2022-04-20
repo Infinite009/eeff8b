@@ -98,7 +98,8 @@ const Home = ({ user, logout }) => {
       if (sender !== null) {
         const newConvo = {
           id: message.conversationId,
-          otherUser: sender,
+          lastReadId: 0,
+          otherUser: { ...sender, lastReadId: 0 },
           messages: [message],
         };
         newConvo.latestMessageText = message.text;
@@ -128,10 +129,23 @@ const Home = ({ user, logout }) => {
         if (convo.id !== conversationId) return convo;
         return { ...convo, lastReadId };
       }));
+
+      sendLastReadId(conversationId, lastReadId);
     } catch (err) {
       console.error(err);
     }
   };
+
+  const sendLastReadId = (conversationId, lastReadId) => {
+    socket.emit('last-read', { conversationId, lastReadId });
+  };
+
+  const updateOtherUserLastReadId = useCallback(({ conversationId, lastReadId }) => {
+    setConversations((prev) => prev.map(convo => {
+      if (convo.id !== conversationId) return convo;
+      return { ...convo, otherUser: { ...convo.otherUser, lastReadId } };
+    }));
+  }, []);
 
   const addOnlineUser = useCallback((id) => {
     setConversations((prev) =>
@@ -168,6 +182,7 @@ const Home = ({ user, logout }) => {
     socket.on('add-online-user', addOnlineUser);
     socket.on('remove-offline-user', removeOfflineUser);
     socket.on('new-message', addMessageToConversation);
+    socket.on('last-read', updateOtherUserLastReadId);
 
     return () => {
       // before the component is destroyed
@@ -175,8 +190,9 @@ const Home = ({ user, logout }) => {
       socket.off('add-online-user', addOnlineUser);
       socket.off('remove-offline-user', removeOfflineUser);
       socket.off('new-message', addMessageToConversation);
+      socket.off('last-read', updateOtherUserLastReadId);
     };
-  }, [addMessageToConversation, addOnlineUser, removeOfflineUser, socket]);
+  }, [addMessageToConversation, addOnlineUser, removeOfflineUser, updateOtherUserLastReadId, socket]);
 
   useEffect(() => {
     // when fetching, prevent redirect
