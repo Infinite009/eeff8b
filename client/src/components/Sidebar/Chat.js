@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@material-ui/core';
+import { Box, Badge } from '@material-ui/core';
 import { BadgeAvatar, ChatContent } from '../Sidebar';
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -15,6 +15,11 @@ const useStyles = makeStyles((theme) => ({
       cursor: 'grab',
     },
   },
+  badge: {
+    "& span": {
+      transform: "translate(0%, -50%)"
+    }
+  }
 }));
 
 const Chat = ({ conversation, setActiveChat }) => {
@@ -34,6 +39,9 @@ const Chat = ({ conversation, setActiveChat }) => {
         sidebar={true}
       />
       <ChatContent conversation={conversation} />
+      {conversation.unreadCount > 0 &&
+        <Badge badgeContent={conversation.unreadCount} color="primary" className={classes.badge} />
+      }
     </Box>
   );
 };
