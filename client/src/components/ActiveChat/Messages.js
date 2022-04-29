@@ -19,9 +19,9 @@ const Messages = (props) => {
 
   useEffect(() => {
     if (unreadCount === 0) return;
-    
-    for (let i = messages.length - 1; i >= 0; i --)
-      if (messages[i].senderId !== userId ) {
+
+    for (let i = messages.length - 1; i >= 0; i--)
+      if (messages[i].senderId !== userId) {
         updateLastReadId(conversationId, messages[i].id);
         return;
       }
@@ -33,7 +33,7 @@ const Messages = (props) => {
         const time = moment(message.createdAt).format('h:mm');
 
         return message.senderId === userId ? (
-          <div key={message.id}>
+          <Box key={message.id}>
             <SenderBubble text={message.text} time={time} />
             {message.id === otherUser.lastReadId &&
               <Avatar
@@ -42,7 +42,7 @@ const Messages = (props) => {
                 className={classes.avatar}
               />
             }
-          </div>
+          </Box>
         ) : (
           <OtherUserBubble
             key={message.id}

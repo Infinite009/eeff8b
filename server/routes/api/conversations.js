@@ -109,7 +109,7 @@ router.patch("/last-read", async (req, res, next) => {
     else return res.sendStatus(403);
 
     await Conversation.update(updateClause, { where: { id } });
-    res.json(true);
+    res.sendStatus(204);
   } catch (err) {
     next(err);
   }
