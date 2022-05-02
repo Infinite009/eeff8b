@@ -4,11 +4,13 @@ const User = require("./user");
 const Message = require("./message");
 
 // associations
+Conversation.belongsToMany(User, {
+  through: Participant
+});
+User.belongsToMany(Conversation, {
+  through: Participant
+});
 
-Conversation.hasMany(Participant);
-Participant.belongsTo(Conversation);
-User.hasMany(Participant);
-Participant.belongsTo(User);
 User.hasMany(Message);
 Message.belongsTo(User);
 Conversation.hasMany(Message);
